@@ -5,10 +5,6 @@ pipeline {
         nodejs 'NodeJS-18' // Make sure you have NodeJS tool configured in Jenkins
     }
 
-    environment {
-        // Environment variables can be added here if needed
-    }
-
     stages {
         stage('Build Angular App') {
             steps {
