@@ -1,8 +1,9 @@
 pipeline {
-    agent any
-
-    tools {
-        nodejs 'NodeJS-18' // Make sure you have NodeJS tool configured in Jenkins
+    agent {
+        docker {
+            image 'docker:dind'
+            args '--privileged -v /var/run/docker.sock:/var/run/docker.sock'
+        }
     }
 
     environment {
@@ -13,8 +14,10 @@ pipeline {
     stages {
         stage('Build Angular App') {
             steps {
-                echo 'Building Angular application...'
+                echo 'Installing Node.js and building Angular application...'
                 sh '''
+                    # Install Node.js in the Docker container
+                    apk add --no-cache nodejs npm
                     npm install
                     npm run build -- --configuration production
                 '''
