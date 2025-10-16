@@ -1,9 +1,8 @@
 pipeline {
-    agent {
-        docker {
-            image 'node:18-alpine'
-            args '-v /var/run/docker.sock:/var/run/docker.sock'
-        }
+    agent any
+
+    tools {
+        nodejs 'NodeJS-18' // Make sure you have NodeJS tool configured in Jenkins
     }
 
     environment {
@@ -25,20 +24,20 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 echo 'Building Docker image...'
-                script {
-                    dockerImage = docker.build("${IMAGE_NAME}")
-                }
+                sh '''
+                    # Build the Docker image directly using docker build
+                    docker build -t ${IMAGE_NAME} .
+                '''
             }
         }
 
         stage('Push Docker Image') {
             steps {
                 echo 'Pushing Docker image to Docker Hub...'
-                script {
-                    docker.withRegistry('https://index.docker.io/v1/', 'dockerhub') {
-                        dockerImage.push('latest')
-                    }
-                }
+                sh '''
+                    echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin
+                    docker push ${IMAGE_NAME}
+                '''
             }
         }
 
