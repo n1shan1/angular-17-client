@@ -16,7 +16,7 @@ pipeline {
                 echo 'Building Angular application...'
                 sh '''
                     npm install
-                    npm run build --configuration production
+                    npm run build -- --configuration production
                 '''
             }
         }
