@@ -1,37 +1,63 @@
 pipeline {
     agent any
 
-    tools {
-        nodejs 'node18'
+    environment {
+        DOCKERHUB_CREDENTIALS = credentials('dockerhub')
+        IMAGE_NAME = "${DOCKERHUB_CREDENTIALS_USR}/angular-frontend:latest"
     }
 
     stages {
-        stage('Clone Repository') {
+        stage('Checkout') {
             steps {
-                echo 'Cloning the repository...'
-                checkout scm
-            }
-        }
-
-        stage('Install Dependencies') {
-            steps {
-                echo 'Installing dependencies...'
-                sh 'npm install'
+                git branch: 'main', url: 'https://github.com/yourusername/angular-frontend.git'
             }
         }
 
         stage('Build Angular App') {
             steps {
-                echo 'Building the Angular app...'
-                sh 'npm run build'
+                echo 'Building Angular application...'
+                sh '''
+                    npm install -g @angular/cli
+                    npm install
+                    ng build --configuration production
+                '''
             }
         }
 
-        stage('Archive Build Artifacts') {
+        stage('Build Docker Image') {
             steps {
-                echo 'Archiving build output...'
-                archiveArtifacts artifacts: 'dist/**', fingerprint: true
+                echo 'Building Docker image...'
+                script {
+                    dockerImage = docker.build("${IMAGE_NAME}")
+                }
             }
+        }
+
+        stage('Push Docker Image') {
+            steps {
+                echo 'Pushing Docker image to Docker Hub...'
+                script {
+                    docker.withRegistry('https://index.docker.io/v1/', 'dockerhub') {
+                        dockerImage.push('latest')
+                    }
+                }
+            }
+        }
+
+        stage('Cleanup') {
+            steps {
+                echo 'Cleaning up...'
+                sh 'docker system prune -f'
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "✅ Build and push successful!"
+        }
+        failure {
+            echo "❌ Build failed!"
         }
     }
 }
