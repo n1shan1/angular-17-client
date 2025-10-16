@@ -7,12 +7,6 @@ pipeline {
     }
 
     stages {
-        stage('Checkout') {
-            steps {
-                git branch: 'main', url: 'https://github.com/n1shan1/angular-17-client'
-            }
-        }
-
         stage('Build Angular App') {
             steps {
                 echo 'Building Angular application...'
